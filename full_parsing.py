@@ -76,8 +76,9 @@ def webScrap(domain):
         except: ip = 'IP não Localizado'
         ips.append(ip)
         print('IP/Dominio -> [', ip ,']', url)
-        print('### Whois')
-        print(whois.whois(url))
+        if not config.whois:
+            print('### Whois')
+            print(whois.whois(url))
         if not config.portscan:
             if input('Analisar TopPorts desse Host? [s/n]') in 's':
                 print('### Ports')
@@ -104,6 +105,7 @@ def repWebScrap(urls_encontradas):
 class config():
     portscan = False
     alldomain = False
+    whois = False
 
 domain = sys.argv[1]
 ips = []
