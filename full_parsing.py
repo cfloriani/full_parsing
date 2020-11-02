@@ -3,7 +3,7 @@ import re, sys, validators, socket, whois
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from base import topPorts, urls_conhecidas
-from ftplib import ftp
+from ftplib import FTP
 
 # pega o banner do serviço da porta aberta
 def banner(sckt, ip, porta):
@@ -40,8 +40,6 @@ def webScrap(domain):
     print('#####################################################################')
     print('### Analisando o site -> ', domain)
     print('')
-    print('### Whois')
-    print(whois.whois(domain))
     try: html = urlopen(domain)
     except: print('Erro ao carregar o site')
     soup = BeautifulSoup(html, "lxml")
@@ -53,14 +51,17 @@ def webScrap(domain):
             if url not in urls_encontradas:
                 urls_encontradas.append(url)
 
-    print('### Ports')
+    
     for url in urls_encontradas:
         try: ip = socket.gethostbyname(url)
         except: ip = 'IP não Localizado'
         ips.append(ip)
         print('IP/Dominio -> [', ip ,']', url)
+        print('### Whois')
+        print(whois.whois(url))
         if not config.portscan:
             if input('Analisar TopPorts desse Host? [s/n]') in 's':
+                print('### Ports')
                 for port in topPorts: 
                     portScan(ip,port)
 
@@ -72,12 +73,13 @@ def webScrap(domain):
                     # tenta acessar o ftp como anonimo
                     if port == 21: 
                         try: 
-                            ftp(ip)
-                            ftp.login()
+                            FTP(ip)
+                            FTP.login()
                             ftp_anonimo.append(ip)
                         except:
                             pass
         else: 
+            print('### Ports')
             for port in topPorts: portScan(ip,port)
         print('')
     return urls_encontradas
