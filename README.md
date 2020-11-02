@@ -1,2 +1,3 @@
-# full_parsing
-Script criado para praticar a aula
+# Full Parsing  
+  
+Script para praticar as aulas
