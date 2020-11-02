@@ -20,10 +20,28 @@ def portScan(ip, port):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(0.3)
-        if s.connect_ex((ip, int(port))) == 0:
-            print("Porta [ABERTA] -> {}/tcp".format(port), ' ' ,banner(s, ip, port))
     except:
         pass
+    if s.connect_ex((ip, int(port))) == 0:
+        print("Porta [ABERTA] -> {}/tcp".format(port), ' ' ,banner(s, ip, port))
+
+        # verifica se existe web server
+        if port != 80 or port != 443:
+            try:
+                try: web = urlopen('http://'+ip+':'+str(port))
+                except: web = urlopen('https://'+ip+':'+str(port))
+                if web.code == 200: srv_web_port_desconhecida.append(ip+':'+str(port))
+            except:
+                pass
+        
+        # tenta acessar o ftp como anonimo
+        if port == 21: 
+            try: 
+                FTP(ip)
+                FTP.login()
+                ftp_anonimo.append(ip)
+            except:
+                pass
 
 # faz uma limpeza no dominio pra funcionar com o BS4
 def domainClear(url):
@@ -45,13 +63,14 @@ def webScrap(domain):
     soup = BeautifulSoup(html, "lxml")
     urls_encontradas = []
 
+    # abre a página e pega as urls
     for url in soup.findAll('a'):
         url = domainClear(url.get('href'))
         if validators.domain(url) and url not in urls_conhecidas:
             if url not in urls_encontradas:
                 urls_encontradas.append(url)
 
-    
+    # varre as páginas encontradas
     for url in urls_encontradas:
         try: ip = socket.gethostbyname(url)
         except: ip = 'IP não Localizado'
@@ -64,23 +83,10 @@ def webScrap(domain):
                 print('### Ports')
                 for port in topPorts: 
                     portScan(ip,port)
-
-                    # verifica se existe web server
-                    try: web = urlopen('http://'+ip+':'+port)
-                    except: web = urlopen('https://'+ip+':'+port)
-                    if web.code == 200: srv_web_port_desconhecida.append(ip+':'+port)
-
-                    # tenta acessar o ftp como anonimo
-                    if port == 21: 
-                        try: 
-                            FTP(ip)
-                            FTP.login()
-                            ftp_anonimo.append(ip)
-                        except:
-                            pass
         else: 
             print('### Ports')
-            for port in topPorts: portScan(ip,port)
+            for port in topPorts: 
+                portScan(ip,port)
         print('')
     return urls_encontradas
 
